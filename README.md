@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/spencercnorton/xnote/main/images/hicolor/scalable/apps/xnote.svg" alt="XNote Placement icon" width="96">
+  <img src="https://raw.githubusercontent.com/spencernorton/xnote/main/images/hicolor/scalable/apps/xnote.svg" alt="XNote Placement icon" width="96">
 </p>
 
 <h1 align="center">XNote Placement</h1>
@@ -11,20 +11,20 @@
 
 <p align="center">
   <a href="https://norvitech.com"><img alt="NorviTech Suite" src="https://img.shields.io/badge/NorviTech-Suite-FD8024.svg"></a>
-  <a href="https://github.com/spencercnorton/xnote-placement/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/spencercnorton/xnote-placement/actions/workflows/ci.yml/badge.svg"></a>
-  <a href="https://github.com/spencercnorton/xnote-placement/tags"><img alt="Latest release" src="https://img.shields.io/github/v/tag/spencercnorton/xnote-placement?label=release&sort=semver"></a>
+  <a href="https://github.com/spencernorton/xnote-placement/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/spencernorton/xnote-placement/actions/workflows/ci.yml/badge.svg"></a>
+  <a href="https://github.com/spencernorton/xnote-placement/tags"><img alt="Latest release" src="https://img.shields.io/github/v/tag/spencercnorton/xnote-placement?label=release&sort=semver"></a>
   <a href="https://norvitech.com/#install"><img alt="APT repository" src="https://img.shields.io/badge/apt-Ubuntu%2026.04-e95420.svg?logo=ubuntu&logoColor=white"></a>
   <a href="LICENSE"><img alt="Licence" src="https://img.shields.io/badge/licence-GPL--3.0--or--later-blue.svg"></a>
   <a href="https://buy.stripe.com/8x26oH2U44f65TRe574wM04"><img alt="Donate" src="https://img.shields.io/badge/donate-Stripe-635bff.svg?logo=stripe&logoColor=white"></a>
 </p>
 
 <p align="center">
-  <img alt="Five XNote sticky notes of different colours and sizes spread across a desktop, each where its owner left it" src="https://raw.githubusercontent.com/spencercnorton/xnote/main/screenshots/xnote-desktop.png" width="900">
+  <img alt="Five XNote sticky notes of different colours and sizes spread across a desktop, each where its owner left it" src="https://raw.githubusercontent.com/spencernorton/xnote/main/screenshots/xnote-desktop.png" width="900">
 </p>
 
 XNote's own reviewed capture: an isolated profile with invented notes, nothing personal.
 
-[XNote](https://github.com/spencercnorton/xnote) keeps each sticky note as its
+[XNote](https://github.com/spencernorton/xnote) keeps each sticky note as its
 own window, and since version 3.0 it is a native Wayland application. Under
 Wayland a client cannot place its own window — no position, no monitor, no
 workspace — so XNote remembers a note's size but not where it was. This
@@ -85,7 +85,7 @@ gnome-extensions enable xnote-placement@spencercnorton.github.io
 ### From source
 
 ```bash
-git clone https://github.com/spencercnorton/xnote-placement.git
+git clone https://github.com/spencernorton/xnote-placement.git
 cd xnote-placement
 install -d ~/.local/share/gnome-shell/extensions/xnote-placement@spencercnorton.github.io
 install -m 0644 extension.js metadata.json \
@@ -121,8 +121,8 @@ Nothing leaves the machine: the extension has no network functionality.
 
 ## Contributing and support
 
-- Bugs and feature requests: [open an issue](https://github.com/spencercnorton/xnote-placement/issues/new/choose). Questions: [Discussions](https://github.com/spencercnorton/xnote-placement/discussions).
-- Security reports: [private vulnerability reporting](https://github.com/spencercnorton/xnote-placement/security/advisories/new) — see [SECURITY.md](SECURITY.md). There is no e-mail address; that is deliberate.
+- Bugs and feature requests: [open an issue](https://github.com/spencernorton/xnote-placement/issues/new/choose). Questions: [Discussions](https://github.com/spencernorton/xnote-placement/discussions).
+- Security reports: [private vulnerability reporting](https://github.com/spencernorton/xnote-placement/security/advisories/new) — see [SECURITY.md](SECURITY.md). There is no e-mail address; that is deliberate.
 - Pull requests are welcome; read [CONTRIBUTING.md](CONTRIBUTING.md) first.
 - If XNote Placement saves you time, you can [support its development](https://buy.stripe.com/8x26oH2U44f65TRe574wM04).
 
@@ -152,14 +152,14 @@ every release.
 </p>
 
 <p align="center">
-  <a href="https://github.com/spencercnorton/helios">Helios</a> ·
-  <a href="https://github.com/spencercnorton/bitagent">BitAgent</a> ·
-  <a href="https://github.com/spencercnorton/xnote">XNote</a> ·
-  <a href="https://github.com/spencercnorton/xnote-placement">XNote Placement</a> ·
-  <a href="https://github.com/spencercnorton/snipsnap">SnipSnap</a> ·
-  <a href="https://github.com/spencercnorton/conductor">Conductor</a> ·
-  <a href="https://github.com/spencercnorton/norvi-os">NorviOS</a> ·
-  <a href="https://github.com/spencercnorton/indigo">Indigo</a> ·
-  <a href="https://github.com/spencercnorton/roadtrack">Road Track</a> ·
+  <a href="https://github.com/spencernorton/helios">Helios</a> ·
+  <a href="https://github.com/spencernorton/bitagent">BitAgent</a> ·
+  <a href="https://github.com/spencernorton/xnote">XNote</a> ·
+  <a href="https://github.com/spencernorton/xnote-placement">XNote Placement</a> ·
+  <a href="https://github.com/spencernorton/snipsnap">SnipSnap</a> ·
+  <a href="https://github.com/spencernorton/conductor">Conductor</a> ·
+  <a href="https://github.com/spencernorton/norvi-os">NorviOS</a> ·
+  <a href="https://github.com/spencernorton/indigo">Indigo</a> ·
+  <a href="https://github.com/spencernorton/roadtrack">Road Track</a> ·
   <a href="https://norvitech.com">norvitech.com</a>
 </p>
