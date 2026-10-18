@@ -15,7 +15,7 @@ workflow builds the `.deb` and publishes it with the tagged source, and
 
 ## Before you start
 
-- **Bugs** — open a [bug report](https://github.com/spencercnorton/xnote-placement/issues/new/choose).
+- **Bugs** — open a [bug report](https://github.com/spencernorton/xnote-placement/issues/new/choose).
   A report with reproduction steps, versions and a scrubbed log excerpt is
   usually fixed faster than a pull request that arrives without one.
 - **Features** — open a feature request first. XNote Placement has strong opinions
@@ -23,7 +23,7 @@ workflow builds the `.deb` and publishes it with the tagged source, and
   (see the README); an idea that cuts across them needs a conversation before
   code.
 - **Security** — never in a public issue. Use
-  [private vulnerability reporting](https://github.com/spencercnorton/xnote-placement/security/advisories/new);
+  [private vulnerability reporting](https://github.com/spencernorton/xnote-placement/security/advisories/new);
   see [SECURITY.md](SECURITY.md).
 
 ## Working on the code
@@ -63,7 +63,7 @@ So nobody wastes an evening on it, XNote Placement will not accept:
 - telemetry, analytics, or any network functionality
 - placing windows of any application other than XNote — this is not a general window-placement extension
 - reading more of a note than its first line, or writing anywhere but `~/.local/state/xnote-placement/`
-- changes to XNote itself — that is the [XNote repository](https://github.com/spencercnorton/xnote)
+- changes to XNote itself — that is the [XNote repository](https://github.com/spencernorton/xnote)
 
 ## Pull request checklist
 

@@ -3,7 +3,7 @@
 ## Reporting a vulnerability
 
 Please report vulnerabilities privately through GitHub:
-**[Report a vulnerability](https://github.com/spencercnorton/xnote-placement/security/advisories/new)**.
+**[Report a vulnerability](https://github.com/spencernorton/xnote-placement/security/advisories/new)**.
 Do not open a public issue, and do not include real credentials, note titles, monitor serials
 or personal paths in the report — a description and a minimal reproduction
 are enough.
@@ -22,7 +22,7 @@ Only the latest tagged release is supported. XNote Placement has no LTS line.
 
 In scope: this repository's code and the artefacts it ships.
 Out of scope: XNote itself (report to
-[its own advisory form](https://github.com/spencercnorton/xnote/security/advisories/new)),
+[its own advisory form](https://github.com/spencernorton/xnote/security/advisories/new)),
 third-party services XNote Placement connects to, and deployments the maintainer
 does not operate.
 
