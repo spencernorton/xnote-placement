@@ -1,10 +1,10 @@
 {
   "uuid": "xnote-placement@spencercnorton.github.io",
   "name": "XNote Placement",
-  "description": "Remembers where each XNote sticky note was — position, monitor and workspace — and puts it back whenever the note opens. Wayland gives an app no way to place its own windows, so the compositor has to do it.\n\nRequires XNote 3.0.2 or later: https://github.com/spencercnorton/xnote",
+  "description": "Remembers where each XNote sticky note was — position, monitor and workspace — and puts it back whenever the note opens. Wayland gives an app no way to place its own windows, so the compositor has to do it.\n\nRequires XNote 3.0.2 or later: https://github.com/spencernorton/xnote",
   "shell-version": [
     "50"
   ],
-  "url": "https://github.com/spencercnorton/xnote-placement",
-  "version-name": "1.1.6"
+  "url": "https://github.com/spencernorton/xnote-placement",
+  "version-name": "1.1.7"
 }

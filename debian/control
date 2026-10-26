@@ -4,7 +4,7 @@ Priority: optional
 Maintainer: NorviTech <apt@globalentry.systems>
 Build-Depends: debhelper-compat (= 13)
 Standards-Version: 4.7.2
-Homepage: https://github.com/spencercnorton/xnote-placement
+Homepage: https://github.com/spencernorton/xnote-placement
 Rules-Requires-Root: no
 
 Package: gnome-shell-extension-xnote-placement

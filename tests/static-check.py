@@ -60,8 +60,8 @@ def main() -> None:
     assert metadata["name"] == "XNote Placement"
     assert metadata["shell-version"] == ["50"]
     assert "version" not in metadata
-    assert metadata["version-name"] == "1.1.6"
-    assert metadata["url"] == "https://github.com/spencercnorton/xnote-placement"
+    assert metadata["version-name"] == "1.1.7"
+    assert metadata["url"] == "https://github.com/spencernorton/xnote-placement"
 
     source = EXTENSION.read_text(encoding="utf-8")
     assert has_comment("x(); // y") and has_comment("/* y */") and not has_comment("import G from 'gi://Gio';")
