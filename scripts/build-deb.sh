@@ -21,7 +21,7 @@ cat > "$changelog" <<CHANGELOG
 $pkg ($version) resolute; urgency=medium
 
   * Release $version. The release notes:
-    https://github.com/spencercnorton/xnote-placement/blob/main/CHANGELOG.md
+    https://github.com/spencernorton/xnote-placement/blob/main/CHANGELOG.md
 
  -- NorviTech <apt@globalentry.systems>  $(date -u -d "@$stamp" '+%a, %d %b %Y %H:%M:%S +0000')
 CHANGELOG

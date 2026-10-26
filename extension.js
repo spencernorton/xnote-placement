@@ -7,6 +7,7 @@ import {Extension} from 'resource:///org/gnome/shell/extensions/extension.js';
 const WM_CLASS = 'xnote';
 const SAVE_DEBOUNCE_MS = 750;
 const SETTLE_MS = 500;
+const PAD_CACHE_US = 250000;
 const TAG = '\ue000';
 
 function readText(path) {
@@ -37,6 +38,8 @@ export default class XNotePlacementExtension extends Extension {
 
         this._claimed = new Map();
         this._tracked = new Map();
+        this._padCache = null;
+        this._padCacheAt = 0;
         this._laters = global.compositor.get_laters();
         this._laterIds = new Set();
 
@@ -61,6 +64,8 @@ export default class XNotePlacementExtension extends Extension {
             this._untrack(win, true);
         this._tracked = null;
         this._claimed = null;
+        this._padCache = null;
+        this._padCacheAt = 0;
         this._store = null;
         this._stateDir = null;
         this._storePath = null;
@@ -147,9 +152,20 @@ export default class XNotePlacementExtension extends Extension {
         return pads;
     }
 
+    _pads(force = false) {
+        const now = GLib.get_monotonic_time();
+        if (!force && this._padCache && now - this._padCacheAt < PAD_CACHE_US)
+            return this._padCache;
+        this._padCache = this._readPads();
+        this._padCacheAt = now;
+        return this._padCache;
+    }
+
     _identify(win, existing) {
         const title = win.get_title() ?? '';
-        const free = this._readPads().filter(p => p.title === title && !this._claimed.has(p.id));
+        let free = this._pads().filter(p => p.title === title && !this._claimed.has(p.id));
+        if (!free.length)
+            free = this._pads(true).filter(p => p.title === title && !this._claimed.has(p.id));
         if (existing) {
             const {x, y} = win.get_frame_rect();
             const workspace = win.get_workspace()?.index();

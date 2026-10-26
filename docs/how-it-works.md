@@ -59,7 +59,11 @@ note whose id sorts before a visible one with the same first line then
 swaps records with it for that session.
 
 If a note cannot be matched, it is left exactly where the compositor put it.
-Nothing is guessed.
+Nothing is guessed. During login and unlock bursts, `_pads()` reuses the
+parsed pad list for 250 ms so adopting every open note does not re-read all
+`info-*` and `content-*` files on the compositor thread for each window, and
+falls back to an immediate re-read when a newly created or renamed window is
+not in the cached list.
 
 ## Storage
 

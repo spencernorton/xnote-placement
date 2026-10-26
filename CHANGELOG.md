@@ -2,6 +2,16 @@
 
 All notable changes to XNote Placement are documented here.
 
+## 1.1.7 — 2026-10-26
+
+- Cache the parsed `~/.config/xnote` pad list for 250 ms during window adoption
+  bursts so login and screen unlock do not re-read every `info-*` and
+  `content-*` file on the compositor thread for each window, falling back to an
+  immediate re-read when a newly opened or renamed note is not in the cached
+  list.
+- Update remaining GitHub repository links to `spencernorton` while keeping the
+  extension UUID `xnote-placement@spencercnorton.github.io`.
+
 ## 1.1.6 — 2026-10-07
 
 - No change to the extension. Development moved to this repository: pull
