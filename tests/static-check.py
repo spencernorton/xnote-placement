@@ -60,7 +60,7 @@ def main() -> None:
     assert metadata["name"] == "XNote Placement"
     assert metadata["shell-version"] == ["50"]
     assert "version" not in metadata
-    assert metadata["version-name"] == "1.1.7"
+    assert metadata["version-name"] == "1.1.8"
     assert metadata["url"] == "https://github.com/spencernorton/xnote-placement"
 
     source = EXTENSION.read_text(encoding="utf-8")

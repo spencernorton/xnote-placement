@@ -2,6 +2,15 @@
 
 All notable changes to XNote Placement are documented here.
 
+## 1.1.8 — 2026-10-27
+
+- Clear any compositor `demands_attention` state when adopting and placing
+  newly opened notes across workspaces so restored notes do not mark the dock
+  icon urgent or force workspace-by-workspace activation on login.
+- Arm the settle timer whenever a newly created note already has a non-zero
+  frame rectangle at adoption time, even if its initial geometry signals fired
+  before `IDLE` adoption connected its listeners.
+
 ## 1.1.7 — 2026-10-26
 
 - Cache the parsed `~/.config/xnote` pad list for 250 ms during window adoption
