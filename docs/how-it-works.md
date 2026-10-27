@@ -139,6 +139,10 @@ note is not on its record: mutter has placed it, part way or completely.
 Only a note sitting exactly on its record (position and workspace) is
 adopted as settled; any other note is put back and settles like a new
 window, on its own settle timer since no further geometry signal may come.
+While a note is being adopted and placed onto its saved workspace (before it
+settles), any `demands_attention` flag set by the compositor's focus-stealing
+prevention is cleared so background sticky notes restored across workspaces at
+login never leave the dock icon bouncing as urgent.
 Before 1.1.3 a sized note counted as settled at `enable()`, so mutter's second
 placement could be saved over the record, and a note it had finished placing
 snapped back the first time it was moved.

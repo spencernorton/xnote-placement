@@ -226,6 +226,8 @@ export default class XNotePlacementExtension extends Extension {
         this._tracked.set(win, {padId, handlerIds: [], saveTimeout: 0, settleTimeout: 0, settled});
 
         this._applyPlacement(win, padId);
+        if (win.demands_attention)
+            win.unset_demands_attention?.();
 
         this._tracked.get(win).handlerIds = [
             win.connect('position-changed', () => {
@@ -249,9 +251,13 @@ export default class XNotePlacementExtension extends Extension {
                 if (this._tracked.get(win)?.settled)
                     this._queueSave(win);
             }),
+            win.connect('notify::demands-attention', () => {
+                if (!this._tracked.get(win)?.settled && win.demands_attention)
+                    win.unset_demands_attention?.();
+            }),
             win.connect('unmanaged', () => this._untrack(win, true)),
         ];
-        if (existing && onMonitor)
+        if (onMonitor)
             this._beginSettle(win, padId);
     }
 
@@ -275,6 +281,8 @@ export default class XNotePlacementExtension extends Extension {
     }
 
     _applyPlacement(win, padId) {
+        if (!this._tracked.get(win)?.settled && win.demands_attention)
+            win.unset_demands_attention?.();
         const g = this._store[padId];
         if (!g)
             return;
@@ -285,6 +293,8 @@ export default class XNotePlacementExtension extends Extension {
             if (idx >= 0 && win.get_workspace()?.index() !== idx)
                 win.change_workspace_by_index(idx, false);
         }
+        if (!this._tracked.get(win)?.settled && win.demands_attention)
+            win.unset_demands_attention?.();
 
         const rect = win.get_frame_rect();
         if (rect.width <= 0 || rect.height <= 0)
