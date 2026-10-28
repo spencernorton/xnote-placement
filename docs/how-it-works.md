@@ -143,6 +143,17 @@ While a note is being adopted and placed onto its saved workspace (before it
 settles), any `demands_attention` flag set by the compositor's focus-stealing
 prevention is cleared so background sticky notes restored across workspaces at
 login never leave the dock icon bouncing as urgent.
+
+Since 1.2.0 a newly opened note that has a saved record is also concealed
+(actor hidden) at adoption, before mutter's first presentation, and revealed
+only once it verifies as placed — saved workspace and clamped position — or
+when it settles. Without this the centred default placement was visible for
+a few milliseconds on login before the re-assert moved the note. Three
+guarantees keep the conceal safe: a note already resting on its record when
+the extension enables is never hidden, a 1.5 s fallback reveals a note whose
+monitor is disconnected or whose placement never verifies, and disabling the
+extension or unmanaging the window always reveals it first, so no code path
+can strand an invisible note.
 Before 1.1.3 a sized note counted as settled at `enable()`, so mutter's second
 placement could be saved over the record, and a note it had finished placing
 snapped back the first time it was moved.

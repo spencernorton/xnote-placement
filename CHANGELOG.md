@@ -2,6 +2,17 @@
 
 All notable changes to XNote Placement are documented here.
 
+## 1.2.0 — 2026-10-28
+
+- Hide each newly opened note until it has been moved to its saved position,
+  monitor and workspace, so notes no longer flash at the compositor default
+  in the centre of the screen on login before snapping to their workspace.
+  A note is revealed as soon as it verifies as placed, when it settles, or
+  after a 1.5 s fallback, so a disconnected monitor or an unmatched note can
+  never leave it invisible. Disabling the extension or closing a note always
+  reveals it first. Notes already resting on their record at enable are
+  never hidden.
+
 ## 1.1.8 — 2026-10-27
 
 - Clear any compositor `demands_attention` state when adopting and placing
