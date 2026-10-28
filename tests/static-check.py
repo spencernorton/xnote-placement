@@ -76,7 +76,9 @@ def main() -> None:
     assert "get_compositor_private" in source
     assert "_conceal" in source and "_reveal" in source and "_revealIfPlaced" in source
     assert "REVEAL_FALLBACK_MS" in source
-    assert "actor.hide()" in source and "?.show()" in source
+    assert "actor.hide()" in source and "actor.show()" in source
+    assert "actor.opacity = 0" in source and "actor.opacity = 255" in source
+    assert "remove_all_transitions" in source
     assert "Gio.FileCreateFlags.PRIVATE" in source
     assert "Gio.FILE_ATTRIBUTE_UNIX_MODE, 0o700" in source
     assert "Gio.FILE_ATTRIBUTE_UNIX_MODE, 0o600" in source

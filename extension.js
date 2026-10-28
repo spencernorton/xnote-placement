@@ -296,6 +296,8 @@ export default class XNotePlacementExtension extends Extension {
         const actor = win.get_compositor_private();
         if (!actor)
             return;
+        actor.remove_all_transitions?.();
+        actor.opacity = 0;
         actor.hide();
         entry.concealed = true;
         if (!entry.revealTimeout) {
@@ -321,7 +323,11 @@ export default class XNotePlacementExtension extends Extension {
         if (!entry.concealed)
             return;
         entry.concealed = false;
-        win.get_compositor_private()?.show();
+        const actor = win.get_compositor_private();
+        if (actor) {
+            actor.opacity = 255;
+            actor.show();
+        }
     }
 
     _isPlaced(win, padId) {
@@ -425,7 +431,11 @@ export default class XNotePlacementExtension extends Extension {
         if (entry.concealed) {
             entry.concealed = false;
             try {
-                win.get_compositor_private()?.show();
+                const actor = win.get_compositor_private();
+                if (actor) {
+                    actor.opacity = 255;
+                    actor.show();
+                }
             } catch {
             }
         }
