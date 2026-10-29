@@ -143,6 +143,27 @@ While a note is being adopted and placed onto its saved workspace (before it
 settles), any `demands_attention` flag set by the compositor's focus-stealing
 prevention is cleared so background sticky notes restored across workspaces at
 login never leave the dock icon bouncing as urgent.
+
+Since 1.2.0 a newly opened note that has a saved record is also concealed
+(actor hidden) at adoption, before mutter's first presentation, and revealed.
+Since 1.2.2 the initial hide happens synchronously in `window-created`
+rather than at the adoption idle, which a busy login Shell can delay past
+the first presented frames; a window that turns out not to be a note is
+restored at that idle, and revealed
+only once it verifies as placed — saved workspace and clamped position — or
+when it settles. Without this the centred default placement was visible for
+a few milliseconds on login before the re-assert moved the note. Three
+guarantees keep the conceal safe: a note already resting on its record when
+the extension enables is never hidden, a 1.5 s fallback reveals a note whose
+monitor is disconnected or whose placement never verifies, and disabling the
+extension or unmanaging the window always reveals it first, so no code path
+can strand an invisible note. Since 1.2.1 that reveal also respects workspace
+visibility: `actor.show()` is only called when the window is on the active
+workspace (or on all workspaces) and not minimized, otherwise the actor stays hidden for the compositor to show when
+its workspace becomes active. An unconditional show made notes placed on an
+inactive workspace leak through other compositor effects — notably Blur My
+Shell application blur, which painted a blurred rectangle at the note's saved
+position on the active workspace even though the note itself was elsewhere.
 Before 1.1.3 a sized note counted as settled at `enable()`, so mutter's second
 placement could be saved over the record, and a note it had finished placing
 snapped back the first time it was moved.

@@ -2,6 +2,38 @@
 
 All notable changes to XNote Placement are documented here.
 
+## 1.2.2 — 2026-10-29
+
+- Fix notes flashing at the compositor's centred placement again on busy
+  logins. A new XNote window is now hidden synchronously in the
+  `window-created` handler instead of at the following idle, which a loaded
+  Shell could delay past the first presented frames. Windows that turn out
+  not to be notes are restored at that same idle, and disabling the
+  extension restores any window still waiting for it.
+
+## 1.2.1 — 2026-10-29
+
+- Fix glitchy blur left on the active workspace by notes restored to another
+  workspace. Revealing a note after placement now respects the compositor's
+  workspace visibility instead of showing its actor unconditionally, so a
+  note placed on an inactive workspace stays hidden there until that
+  workspace is shown. The same guard applies when the extension is disabled
+  or a note closes while concealed. Blur My Shell's application blur had
+  followed the forced-visible actor and painted a blurred rectangle with no
+  note on top of it; moving the note to another workspace therefore left
+  the blur behind on the current workspace.
+
+## 1.2.0 — 2026-10-28
+
+- Hide each newly opened note until it has been moved to its saved position,
+  monitor and workspace, so notes no longer flash at the compositor default
+  in the centre of the screen on login before snapping to their workspace.
+  A note is revealed as soon as it verifies as placed, when it settles, or
+  after a 1.5 s fallback, so a disconnected monitor or an unmatched note can
+  never leave it invisible. Disabling the extension or closing a note always
+  reveals it first. Notes already resting on their record at enable are
+  never hidden.
+
 ## 1.1.8 — 2026-10-27
 
 - Clear any compositor `demands_attention` state when adopting and placing

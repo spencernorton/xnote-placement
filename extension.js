@@ -7,6 +7,7 @@ import {Extension} from 'resource:///org/gnome/shell/extensions/extension.js';
 const WM_CLASS = 'xnote';
 const SAVE_DEBOUNCE_MS = 750;
 const SETTLE_MS = 500;
+const REVEAL_FALLBACK_MS = 1500;
 const PAD_CACHE_US = 250000;
 const TAG = '\ue000';
 
@@ -42,6 +43,7 @@ export default class XNotePlacementExtension extends Extension {
         this._padCacheAt = 0;
         this._laters = global.compositor.get_laters();
         this._laterIds = new Set();
+        this._earlyConcealed = new Set();
 
         this._createdId = global.display.connect('window-created',
             (_display, win) => this._onWindowCreated(win));
@@ -60,6 +62,10 @@ export default class XNotePlacementExtension extends Extension {
         this._laterIds?.clear();
         this._laterIds = null;
         this._laters = null;
+        for (const win of [...(this._earlyConcealed ?? [])])
+            this._restoreNewWindow(win);
+        this._earlyConcealed?.clear();
+        this._earlyConcealed = null;
         for (const win of [...this._tracked.keys()])
             this._untrack(win, true);
         this._tracked = null;
@@ -195,12 +201,48 @@ export default class XNotePlacementExtension extends Extension {
         return idx >= 0 ? idx : null;
     }
 
+    _hideNewWindow(win) {
+        try {
+            if (win.get_wm_class() !== WM_CLASS || win.get_window_type() !== Meta.WindowType.NORMAL)
+                return;
+            const actor = win.get_compositor_private();
+            if (!actor)
+                return;
+            actor.remove_all_transitions();
+            actor.opacity = 0;
+            actor.hide();
+            this._earlyConcealed.add(win);
+        } catch {
+        }
+    }
+
+    _restoreNewWindow(win) {
+        try {
+            const actor = win.get_compositor_private();
+            if (!actor)
+                return;
+            actor.opacity = 255;
+            if (win.is_on_all_workspaces() ||
+                (win.get_workspace() === global.workspace_manager.get_active_workspace() && !win.minimized))
+                actor.show();
+            else
+                actor.hide();
+        } catch {
+        }
+    }
+
     _onWindowCreated(win) {
+        this._hideNewWindow(win);
         let id = 0;
         id = this._laters.add(Meta.LaterType.IDLE, () => {
             this._laterIds?.delete(id);
-            if (this._tracked)
+            if (this._tracked) {
                 this._adopt(win);
+                const entry = this._tracked.get(win);
+                this._earlyConcealed.delete(win);
+                if (!entry || !entry.concealed)
+                    this._restoreNewWindow(win);
+            }
             return GLib.SOURCE_REMOVE;
         });
         this._laterIds.add(id);
@@ -223,8 +265,10 @@ export default class XNotePlacementExtension extends Extension {
             g.workspace === win.get_workspace()?.index());
         const settled = existing && rect.width > 0 && rect.height > 0 && onMonitor && inPlace;
         this._claimed.set(padId, win);
-        this._tracked.set(win, {padId, handlerIds: [], saveTimeout: 0, settleTimeout: 0, settled});
+        this._tracked.set(win, {padId, handlerIds: [], saveTimeout: 0, settleTimeout: 0, settled, concealed: false, revealTimeout: 0});
 
+        if (!settled && g)
+            this._conceal(win);
         this._applyPlacement(win, padId);
         if (win.demands_attention)
             win.unset_demands_attention?.();
@@ -235,15 +279,20 @@ export default class XNotePlacementExtension extends Extension {
                 if (!entry)
                     return;
                 if (entry.settled) {
+                    this._reveal(win);
                     this._queueSave(win);
                 } else {
+                    if (!entry.concealed)
+                        this._conceal(win);
                     this._beginSettle(win, padId);
                     this._applyPlacement(win, padId);
+                    this._revealIfPlaced(win, padId);
                 }
             }),
             win.connect('size-changed', () => {
                 this._beginSettle(win, padId);
                 this._applyPlacement(win, padId);
+                this._revealIfPlaced(win, padId);
                 if (this._tracked.get(win)?.settled)
                     this._queueSave(win);
             }),
@@ -274,10 +323,87 @@ export default class XNotePlacementExtension extends Extension {
             if (e) {
                 e.settleTimeout = 0;
                 e.settled = true;
+                this._reveal(win);
                 this._queueSave(win);
             }
             return GLib.SOURCE_REMOVE;
         });
+    }
+
+    _conceal(win) {
+        const entry = this._tracked.get(win);
+        if (!entry || entry.concealed)
+            return;
+        const actor = win.get_compositor_private();
+        if (!actor)
+            return;
+        actor.remove_all_transitions?.();
+        actor.opacity = 0;
+        actor.hide();
+        entry.concealed = true;
+        if (!entry.revealTimeout) {
+            entry.revealTimeout = GLib.timeout_add(GLib.PRIORITY_DEFAULT, REVEAL_FALLBACK_MS, () => {
+                const e = this._tracked.get(win);
+                if (e) {
+                    e.revealTimeout = 0;
+                    this._reveal(win);
+                }
+                return GLib.SOURCE_REMOVE;
+            });
+        }
+    }
+
+    _reveal(win) {
+        const entry = this._tracked.get(win);
+        if (!entry)
+            return;
+        if (entry.revealTimeout) {
+            GLib.source_remove(entry.revealTimeout);
+            entry.revealTimeout = 0;
+        }
+        if (!entry.concealed)
+            return;
+        entry.concealed = false;
+        const actor = win.get_compositor_private();
+        if (actor) {
+            actor.opacity = 255;
+            if (win.is_on_all_workspaces() ||
+                (win.get_workspace() === global.workspace_manager.get_active_workspace() && !win.minimized))
+                actor.show();
+            else
+                actor.hide();
+        }
+    }
+
+    _isPlaced(win, padId) {
+        const g = this._store[padId];
+        if (!g)
+            return true;
+        if (Number.isInteger(g.workspace) && win.get_workspace()?.index() !== g.workspace) {
+            const idx = Math.min(g.workspace, global.workspace_manager.get_n_workspaces() - 1);
+            if (idx >= 0 && win.get_workspace()?.index() !== idx)
+                return false;
+        }
+        const monitor = this._monitorIndexFor(g.monitor);
+        if (monitor === null)
+            return false;
+        const rect = win.get_frame_rect();
+        if (rect.width <= 0 || rect.height <= 0)
+            return false;
+        const area = win.get_work_area_for_monitor(monitor);
+        const x = Math.max(area.x, Math.min(g.x, area.x + area.width - rect.width));
+        const y = Math.max(area.y, Math.min(g.y, area.y + area.height - rect.height));
+        return rect.x === x && rect.y === y;
+    }
+
+    _revealIfPlaced(win, padId) {
+        const entry = this._tracked.get(win);
+        if (!entry?.concealed)
+            return;
+        if (!this._tracked.get(win)?.settled && win.demands_attention)
+            win.unset_demands_attention?.();
+        if (this._isPlaced(win, padId))
+            this._reveal(win);
     }
 
     _applyPlacement(win, padId) {
@@ -309,6 +435,7 @@ export default class XNotePlacementExtension extends Extension {
         const y = Math.max(area.y, Math.min(g.y, area.y + area.height - rect.height));
         if (rect.x !== x || rect.y !== y)
             win.move_frame(true, x, y);
+        this._revealIfPlaced(win, padId);
     }
 
     _queueSave(win) {
@@ -346,6 +473,23 @@ export default class XNotePlacementExtension extends Extension {
         if (!entry)
             return;
         const hadPendingWrite = entry.saveTimeout !== 0;
+        if (entry.concealed) {
+            entry.concealed = false;
+            try {
+                const actor = win.get_compositor_private();
+                if (actor) {
+                    actor.opacity = 255;
+                    if (win.is_on_all_workspaces() ||
+                        (win.get_workspace() === global.workspace_manager.get_active_workspace() && !win.minimized))
+                        actor.show();
+                    else
+                        actor.hide();
+                }
+            } catch {
+            }
+        }
+        if (entry.revealTimeout)
+            GLib.source_remove(entry.revealTimeout);
         if (entry.saveTimeout)
             GLib.source_remove(entry.saveTimeout);
         if (entry.settleTimeout)

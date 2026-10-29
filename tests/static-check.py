@@ -60,7 +60,7 @@ def main() -> None:
     assert metadata["name"] == "XNote Placement"
     assert metadata["shell-version"] == ["50"]
     assert "version" not in metadata
-    assert metadata["version-name"] == "1.1.8"
+    assert metadata["version-name"] == "1.2.2"
     assert metadata["url"] == "https://github.com/spencernorton/xnote-placement"
 
     source = EXTENSION.read_text(encoding="utf-8")
@@ -73,6 +73,15 @@ def main() -> None:
         "ids compare byte by byte, the order XNote opens notes in; a locale folds case"
     assert "this._laterIds.add(id)" in source
     assert "this._laters.remove(id)" in source
+    assert "get_compositor_private" in source
+    assert "_conceal" in source and "_reveal" in source and "_revealIfPlaced" in source
+    assert "REVEAL_FALLBACK_MS" in source
+    assert "actor.hide()" in source and "actor.show()" in source
+    assert "get_active_workspace" in source and "is_on_all_workspaces" in source
+    assert "_hideNewWindow" in source and "_earlyConcealed" in source
+    assert "this._hideNewWindow(win);" in source
+    assert "actor.opacity = 0" in source and "actor.opacity = 255" in source
+    assert "remove_all_transitions" in source
     assert "Gio.FileCreateFlags.PRIVATE" in source
     assert "Gio.FILE_ATTRIBUTE_UNIX_MODE, 0o700" in source
     assert "Gio.FILE_ATTRIBUTE_UNIX_MODE, 0o600" in source
