@@ -43,6 +43,7 @@ export default class XNotePlacementExtension extends Extension {
         this._padCacheAt = 0;
         this._laters = global.compositor.get_laters();
         this._laterIds = new Set();
+        this._earlyConcealed = new Set();
 
         this._createdId = global.display.connect('window-created',
             (_display, win) => this._onWindowCreated(win));
@@ -61,6 +62,10 @@ export default class XNotePlacementExtension extends Extension {
         this._laterIds?.clear();
         this._laterIds = null;
         this._laters = null;
+        for (const win of [...(this._earlyConcealed ?? [])])
+            this._restoreNewWindow(win);
+        this._earlyConcealed?.clear();
+        this._earlyConcealed = null;
         for (const win of [...this._tracked.keys()])
             this._untrack(win, true);
         this._tracked = null;
@@ -196,12 +201,48 @@ export default class XNotePlacementExtension extends Extension {
         return idx >= 0 ? idx : null;
     }
 
+    _hideNewWindow(win) {
+        try {
+            if (win.get_wm_class() !== WM_CLASS || win.get_window_type() !== Meta.WindowType.NORMAL)
+                return;
+            const actor = win.get_compositor_private();
+            if (!actor)
+                return;
+            actor.remove_all_transitions();
+            actor.opacity = 0;
+            actor.hide();
+            this._earlyConcealed.add(win);
+        } catch {
+        }
+    }
+
+    _restoreNewWindow(win) {
+        try {
+            const actor = win.get_compositor_private();
+            if (!actor)
+                return;
+            actor.opacity = 255;
+            if (win.is_on_all_workspaces() ||
+                (win.get_workspace() === global.workspace_manager.get_active_workspace() && !win.minimized))
+                actor.show();
+            else
+                actor.hide();
+        } catch {
+        }
+    }
+
     _onWindowCreated(win) {
+        this._hideNewWindow(win);
         let id = 0;
         id = this._laters.add(Meta.LaterType.IDLE, () => {
             this._laterIds?.delete(id);
-            if (this._tracked)
+            if (this._tracked) {
                 this._adopt(win);
+                const entry = this._tracked.get(win);
+                this._earlyConcealed.delete(win);
+                if (!entry || !entry.concealed)
+                    this._restoreNewWindow(win);
+            }
             return GLib.SOURCE_REMOVE;
         });
         this._laterIds.add(id);
@@ -326,7 +367,11 @@ export default class XNotePlacementExtension extends Extension {
         const actor = win.get_compositor_private();
         if (actor) {
             actor.opacity = 255;
-            actor.show();
+            if (win.is_on_all_workspaces() ||
+                (win.get_workspace() === global.workspace_manager.get_active_workspace() && !win.minimized))
+                actor.show();
+            else
+                actor.hide();
         }
     }
 
@@ -434,7 +479,11 @@ export default class XNotePlacementExtension extends Extension {
                 const actor = win.get_compositor_private();
                 if (actor) {
                     actor.opacity = 255;
-                    actor.show();
+                    if (win.is_on_all_workspaces() ||
+                        (win.get_workspace() === global.workspace_manager.get_active_workspace() && !win.minimized))
+                        actor.show();
+                    else
+                        actor.hide();
                 }
             } catch {
             }
