@@ -19,27 +19,52 @@ export async function exercise(extension, {wait, expect, phase}) {
     const launcher = new Gio.SubprocessLauncher({flags: Gio.SubprocessFlags.NONE});
     launcher.setenv('WAYLAND_DISPLAY', GLib.getenv('WAYLAND_DISPLAY') || 'wayland-0', true);
     const process = launcher.spawnv(['gjs', '-c', client]);
-    try {
-        for (let i = 0; i < 50 && extension._tracked.size !== 1; i++)
+    const until = async (check, description) => {
+        for (let i = 0; i < 100; i++) {
+            const value = check();
+            if (value)
+                return value;
             await wait(100);
-        expect(extension._tracked.size === 1, 'The extension did not recognize and track a real XNote window');
-        const [window] = extension._tracked.keys();
-        await wait(1000);
-        if (phase === 'reenabled') {
-            const actual = window.get_frame_rect();
-            expect(actual.x === saved.x && actual.y === saved.y, 'The recreated note was not restored to its persisted position');
         }
-        window.move_frame(true, 90, 120);
-        await wait(1300);
+        throw new Error(`Timed out waiting for ${description}`);
+    };
+    const geometry = () => {
+        if (!GLib.file_test(extension._storePath, GLib.FileTest.EXISTS))
+            return null;
         const [, bytes] = GLib.file_get_contents(extension._storePath);
-        saved = JSON.parse(new TextDecoder().decode(bytes))['info-runtime'];
-        const actual = window.get_frame_rect();
-        expect(saved?.x === actual.x && saved?.y === actual.y && saved?.workspace === window.get_workspace().index(), 'Real window geometry was not persisted');
+        return JSON.parse(new TextDecoder().decode(bytes))['info-runtime'];
+    };
+    try {
+        await until(() => extension._tracked.size === 1, 'a tracked real note');
+        const [window] = extension._tracked.keys();
+        await until(() => window.get_compositor_private()?.mapped &&
+            extension._tracked.get(window)?.settled, 'the mapped note to finish initial placement');
+        if (phase === 'reenabled') {
+            await until(() => {
+                const actual = window.get_frame_rect();
+                return actual.x === saved.x && actual.y === saved.y;
+            }, 'the recreated note to restore its persisted position');
+        }
+        const target = phase === 'reenabled' ? {x: 180, y: 200} : {x: 90, y: 120};
+        window.move_frame(true, target.x, target.y);
+        await until(() => {
+            const actual = window.get_frame_rect();
+            const stored = geometry();
+            return actual.x === target.x && actual.y === target.y &&
+                stored?.x === actual.x && stored?.y === actual.y &&
+                stored?.workspace === window.get_workspace().index();
+        }, 'the actual moved note geometry to reach disk');
+        saved = geometry();
         const file = Gio.File.new_for_path(extension._storePath);
         expect((file.query_info('unix::mode', Gio.FileQueryInfoFlags.NONE, null).get_attribute_uint32('unix::mode') & 0o777) === 0o600, 'Geometry storage is not private');
+        console.log(`RUNTIME-ACCEPTANCE placement: ${phase} saved ${JSON.stringify(saved)}`);
     } finally {
         process.force_exit();
-        await wait(200);
+        await new Promise(resolve => process.wait_async(null, (source, result) => {
+            source.wait_finish(result);
+            resolve();
+        }));
+        await until(() => extension._tracked.size === 0, 'the actual client to unmap and release tracking');
     }
 }
 
