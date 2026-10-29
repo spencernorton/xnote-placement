@@ -8,11 +8,19 @@ permissions:
   contents: read
 jobs:
   checks:
+    container: ubuntu:26.04@sha256:da6fc2be547864451aa253836dd926da33623312df4a9a243e35dc877c378a78
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     env:
       DEBIAN_FRONTEND: noninteractive
     steps:
+      - name: Container prerequisites
+        run: |
+          apt-get update -qq
+          apt-get install -y -qq --no-install-recommends git ca-certificates python3 nodejs \
+            shellcheck build-essential debhelper dpkg-dev lintian gnome-shell gnome-shell-common \
+            dbus dbus-bin dbus-daemon libgl1-mesa-dri libegl-mesa0 \
+            gsettings-desktop-schemas xwayland at-spi2-core gir1.2-gtk-4.0
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
       - name: Parse as an ES module
         run: |
@@ -22,10 +30,25 @@ jobs:
         run: python3 tests/static-check.py
       - name: Shell scripts
         run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq shellcheck build-essential debhelper dpkg-dev lintian
           shellcheck scripts/build-deb.sh
       - name: Debian package
         run: |
           scripts/build-deb.sh /tmp/dist
           lintian --fail-on error,warning /tmp/dist/gnome-shell-extension-xnote-placement_*_all.deb
+      - name: Track and restore a real note in GNOME Shell 50
+        shell: bash
+        run: |
+          shellcheck tests/shell/runtime.sh
+          dpkg-deb -x /tmp/dist/gnome-shell-extension-xnote-placement_*_all.deb /tmp/runtime-package
+          rm -rf /run/systemd/seats
+          mkdir -p /run/dbus
+          dbus-daemon --system --fork
+          useradd --create-home runtime-tester
+          runuser -u runtime-tester -- tests/shell/runtime.sh \
+            /tmp/runtime-package/usr/share/gnome-shell/extensions/xnote-placement@spencercnorton.github.io 2>&1 | tee shell-runtime.log
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: gnome-shell-runtime-evidence
+          path: shell-runtime.log
+          retention-days: 14
