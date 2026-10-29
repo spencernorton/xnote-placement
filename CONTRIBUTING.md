@@ -75,3 +75,7 @@ paths. Fill it in — it is what the reviewer reads first.
 
 By contributing you agree that your contribution is licensed under the
 [GNU General Public License, version 3 or later](LICENSE) that covers the project.
+
+The private Shell acceptance waits for the fixture client to map and settle,
+for its geometry to reach disk, and for complete process/window teardown.
+These are bounded observations, not fixed sleeps around compositor work.
