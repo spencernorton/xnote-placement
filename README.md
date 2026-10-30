@@ -18,11 +18,10 @@
   <a href="https://buy.stripe.com/8x26oH2U44f65TRe574wM04"><img alt="Donate" src="https://img.shields.io/badge/donate-Stripe-635bff.svg?logo=stripe&logoColor=white"></a>
 </p>
 
-<p align="center">
-  <img alt="Five XNote sticky notes of different colours and sizes spread across a desktop, each where its owner left it" src="https://raw.githubusercontent.com/spencernorton/xnote/main/screenshots/xnote-desktop.png" width="900">
-</p>
+<p align="center"><picture><source media="(prefers-reduced-motion: reduce)" srcset="docs/demos/note-placement-still.png"><img src="docs/demos/note-placement.gif" alt="Move two sticky notes, close XNote, then reopen it with both notes restored to their saved positions." width="900"></picture></p>
 
-XNote's own reviewed capture: an isolated profile with invented notes, nothing personal.
+Actual XNote and compositor-side placement with invented notes in an isolated session. [Recording source and still image](docs/demos/README.md).
+
 
 [XNote](https://github.com/spencernorton/xnote) keeps each sticky note as its
 own window, and since version 3.0 it is a native Wayland application. Under
