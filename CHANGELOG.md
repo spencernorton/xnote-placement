@@ -2,6 +2,10 @@
 
 All notable changes to XNote Placement are documented here.
 
+## Unreleased
+
+- Scan new public content and reachable Git history before merge and release.
+
 ## 1.2.2 — 2026-10-29
 
 - Fix notes flashing at the compositor's centred placement again on busy

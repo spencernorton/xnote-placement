@@ -12,8 +12,12 @@ jobs:
     uses: ./.github/workflows/ci.yml
     permissions:
       contents: read
+  privacy:
+    uses: ./.github/workflows/privacy.yml
+    permissions:
+      contents: read
   build:
-    needs: checks
+    needs: [checks, privacy]
     container: ubuntu:26.04@sha256:da6fc2be547864451aa253836dd926da33623312df4a9a243e35dc877c378a78
     runs-on: ubuntu-24.04
     timeout-minutes: 15
