@@ -4,6 +4,10 @@ All notable changes to XNote Placement are documented here.
 
 ## Unreleased
 
+## 1.2.3 — 2026-11-24
+
+- Never claim a `hidden 1` pad in `_identify()` when adopting a newly mapped window, preventing brand-new notes from hijacking hidden empty notes, teleporting to another workspace, or overwriting their saved geometry in `geometry.json`.
+- Add a real GNOME Shell 50 runtime regression check confirming that a newly mapped empty note leaves hidden empty pad records untouched.
 - Scan new public content and reachable Git history before merge and release.
 
 ## 1.2.2 — 2026-10-29
