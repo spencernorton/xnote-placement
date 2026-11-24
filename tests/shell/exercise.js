@@ -57,6 +57,42 @@ export async function exercise(extension, {wait, expect, phase}) {
         saved = geometry();
         const file = Gio.File.new_for_path(extension._storePath);
         expect((file.query_info('unix::mode', Gio.FileQueryInfoFlags.NONE, null).get_attribute_uint32('unix::mode') & 0o777) === 0o600, 'Geometry storage is not private');
+        if (phase === 'initial') {
+            GLib.file_set_contents(`${config}/info-hidden-empty`, 'content content-hidden-empty\nhidden 1\n');
+            GLib.file_set_contents(`${config}/content-hidden-empty`, '');
+            const hiddenRecord = {x: 420, y: 180, width: 450, height: 500, monitor: saved.monitor, workspace: 1};
+            extension._store['info-hidden-empty'] = {...hiddenRecord};
+            extension._saveStore();
+            const emptyClient = `imports.gi.versions.Gtk='4.0';
+const {Gtk,GLib}=imports.gi;
+GLib.set_prgname('xnote'); Gtk.init();
+const window=new Gtk.Window({title:''});
+window.set_default_size(300,300); window.present();
+new GLib.MainLoop(null,false).run();`;
+            const emptyProc = launcher.spawnv(['gjs', '-c', emptyClient]);
+            try {
+                await until(() => global.get_window_actors().some(a =>
+                    a.meta_window?.get_wm_class() === 'xnote' &&
+                    (a.meta_window.get_title() ?? '') === '' &&
+                    a.mapped), 'a newly mapped empty note');
+                await wait(700);
+                expect(!extension._claimed.has('info-hidden-empty'), 'New empty note hijacked a hidden empty pad');
+                const [, bytes] = GLib.file_get_contents(extension._storePath);
+                const after = JSON.parse(new TextDecoder().decode(bytes))['info-hidden-empty'];
+                expect(after?.width === hiddenRecord.width && after?.height === hiddenRecord.height && after?.workspace === hiddenRecord.workspace,
+                    'Hidden empty pad geometry was overwritten by a new note');
+            } finally {
+                emptyProc.force_exit();
+                await new Promise(resolve => emptyProc.wait_async(null, (source, result) => {
+                    source.wait_finish(result);
+                    resolve();
+                }));
+                GLib.unlink(`${config}/info-hidden-empty`);
+                GLib.unlink(`${config}/content-hidden-empty`);
+                delete extension._store['info-hidden-empty'];
+                extension._saveStore();
+            }
+        }
         console.log(`RUNTIME-ACCEPTANCE placement: ${phase} saved ${JSON.stringify(saved)}`);
     } finally {
         process.force_exit();

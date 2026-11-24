@@ -169,9 +169,10 @@ export default class XNotePlacementExtension extends Extension {
 
     _identify(win, existing) {
         const title = win.get_title() ?? '';
-        let free = this._pads().filter(p => p.title === title && !this._claimed.has(p.id));
+        const match = p => !p.hidden && p.title === title && !this._claimed.has(p.id);
+        let free = this._pads().filter(match);
         if (!free.length)
-            free = this._pads(true).filter(p => p.title === title && !this._claimed.has(p.id));
+            free = this._pads(true).filter(match);
         if (existing) {
             const {x, y} = win.get_frame_rect();
             const workspace = win.get_workspace()?.index();

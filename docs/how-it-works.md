@@ -36,8 +36,11 @@ extension strips that markup the way XNote does, reproduces the title from
 first line never matched.
 
 Notes sharing a first line — typically several empty ones — are handed out
-in `info-*` id order, visible notes before hidden ones: a hidden note has no
-window, and before 1.1.3 it could take a visible note's record. XNote 3.2.3
+in `info-*` id order among visible (`hidden 0`) notes only: a hidden note has
+no window and is never claimed when adopting a newly mapped window (since
+1.2.3, preventing a brand-new note from hijacking a hidden empty note or
+overwriting its saved geometry; XNote 3.3.4 writes `hidden 0` synchronously
+before mapping new or unhidden notes). XNote 3.2.3
 and later opens its notes in that same id order, so the pairing is exact:
 each window gets the id of the note it shows. Both sides compare ids byte by
 byte (`strcmp` in XNote, `<` here). A locale-aware comparison would not do:
