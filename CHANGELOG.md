@@ -4,6 +4,16 @@ All notable changes to XNote Placement are documented here.
 
 ## Unreleased
 
+## 1.2.4 — 2026-11-27
+
+- Skip idle scheduling in `_onWindowCreated()` for non-normal windows and
+  already-identified non-XNote windows, while keeping deferred matching when a
+  new Wayland window has not yet set `wm_class`.
+- Only restore window visibility on idle when the window was actually
+  concealed by `_hideNewWindow()`.
+- Cache logical monitor keys until `monitors-changed` and write debounced
+  geometry saves asynchronously while keeping synchronous flush on teardown.
+
 ## 1.2.3 — 2026-11-24
 
 - Never claim a `hidden 1` pad in `_identify()` when adopting a newly mapped window, preventing brand-new notes from hijacking hidden empty notes, teleporting to another workspace, or overwriting their saved geometry in `geometry.json`.
