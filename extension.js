@@ -2,6 +2,7 @@ import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 import Meta from 'gi://Meta';
 
+import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import {Extension} from 'resource:///org/gnome/shell/extensions/extension.js';
 
 const WM_CLASS = 'xnote';
@@ -34,6 +35,8 @@ export default class XNotePlacementExtension extends Extension {
         this._configDir = GLib.build_filenamev([GLib.get_user_config_dir(), 'xnote']);
         this._storePath = GLib.build_filenamev([GLib.get_user_state_dir(), 'xnote-placement', 'geometry.json']);
         this._stateDir = Gio.File.new_for_path(this._storePath).get_parent();
+        this._stateDirPrepared = false;
+        this._saveCancellable = new Gio.Cancellable();
         this._prepareStateStorage();
         this._store = this._loadStore();
 
@@ -41,6 +44,10 @@ export default class XNotePlacementExtension extends Extension {
         this._tracked = new Map();
         this._padCache = null;
         this._padCacheAt = 0;
+        this._monitorKeysCache = null;
+        this._monitorsChangedId = Main.layoutManager.connect('monitors-changed', () => {
+            this._monitorKeysCache = null;
+        });
         this._laters = global.compositor.get_laters();
         this._laterIds = new Set();
         this._earlyConcealed = new Set();
@@ -57,6 +64,11 @@ export default class XNotePlacementExtension extends Extension {
             global.display.disconnect(this._createdId);
             this._createdId = null;
         }
+        if (this._monitorsChangedId) {
+            Main.layoutManager.disconnect(this._monitorsChangedId);
+            this._monitorsChangedId = null;
+        }
+        this._monitorKeysCache = null;
         for (const id of this._laterIds ?? [])
             this._laters.remove(id);
         this._laterIds?.clear();
@@ -66,6 +78,8 @@ export default class XNotePlacementExtension extends Extension {
             this._restoreNewWindow(win);
         this._earlyConcealed?.clear();
         this._earlyConcealed = null;
+        this._saveCancellable?.cancel();
+        this._saveCancellable = null;
         for (const win of [...this._tracked.keys()])
             this._untrack(win, true);
         this._tracked = null;
@@ -73,6 +87,7 @@ export default class XNotePlacementExtension extends Extension {
         this._padCache = null;
         this._padCacheAt = 0;
         this._store = null;
+        this._stateDirPrepared = false;
         this._stateDir = null;
         this._storePath = null;
         this._configDir = null;
@@ -95,6 +110,7 @@ export default class XNotePlacementExtension extends Extension {
                 Gio.FILE_ATTRIBUTE_UNIX_MODE, 0o600,
                 Gio.FileQueryInfoFlags.NONE, null);
         }
+        this._stateDirPrepared = true;
     }
 
     _loadStore() {
@@ -110,17 +126,33 @@ export default class XNotePlacementExtension extends Extension {
         }
     }
 
-    _saveStore() {
-        this._prepareStateStorage();
+    _saveStore(sync = false) {
+        if (!this._stateDirPrepared)
+            this._prepareStateStorage();
         const bytes = new TextEncoder().encode(`${JSON.stringify(this._store, null, 1)}\n`);
         const store = Gio.File.new_for_path(this._storePath);
-        store.replace_contents(
-            bytes, null, false,
+        if (sync) {
+            store.replace_contents(
+                bytes, null, false,
+                Gio.FileCreateFlags.REPLACE_DESTINATION | Gio.FileCreateFlags.PRIVATE,
+                null);
+            store.set_attribute_uint32(
+                Gio.FILE_ATTRIBUTE_UNIX_MODE, 0o600,
+                Gio.FileQueryInfoFlags.NONE, null);
+            return;
+        }
+        store.replace_contents_bytes_async(
+            new GLib.Bytes(bytes), null, false,
             Gio.FileCreateFlags.REPLACE_DESTINATION | Gio.FileCreateFlags.PRIVATE,
-            null);
-        store.set_attribute_uint32(
-            Gio.FILE_ATTRIBUTE_UNIX_MODE, 0o600,
-            Gio.FileQueryInfoFlags.NONE, null);
+            this._saveCancellable,
+            (file, res) => {
+                try {
+                    file.replace_contents_finish(res);
+                } catch (e) {
+                    if (!e.matches?.(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED))
+                        logError(e, 'xnote-placement: could not save geometry');
+                }
+            });
     }
 
     _readPads() {
@@ -187,6 +219,8 @@ export default class XNotePlacementExtension extends Extension {
     }
 
     _monitorKeys() {
+        if (this._monitorKeysCache)
+            return this._monitorKeysCache;
         const keys = [];
         for (const logical of global.backend.get_monitor_manager().get_logical_monitors()) {
             const m = logical.get_monitors()[0];
@@ -194,6 +228,7 @@ export default class XNotePlacementExtension extends Extension {
                 ? `${m.get_serial() || ''}|${m.get_connector() || ''}`
                 : null;
         }
+        this._monitorKeysCache = keys;
         return keys;
     }
 
@@ -233,6 +268,11 @@ export default class XNotePlacementExtension extends Extension {
     }
 
     _onWindowCreated(win) {
+        if (!win || win.get_window_type() !== Meta.WindowType.NORMAL)
+            return;
+        const wmClass = win.get_wm_class();
+        if (wmClass && wmClass !== WM_CLASS)
+            return;
         this._hideNewWindow(win);
         let id = 0;
         id = this._laters.add(Meta.LaterType.IDLE, () => {
@@ -240,8 +280,8 @@ export default class XNotePlacementExtension extends Extension {
             if (this._tracked) {
                 this._adopt(win);
                 const entry = this._tracked.get(win);
-                this._earlyConcealed.delete(win);
-                if (!entry || !entry.concealed)
+                const wasConcealed = this._earlyConcealed.delete(win);
+                if (wasConcealed && (!entry || !entry.concealed))
                     this._restoreNewWindow(win);
             }
             return GLib.SOURCE_REMOVE;
@@ -502,7 +542,7 @@ export default class XNotePlacementExtension extends Extension {
 
         if (flush && hadPendingWrite) {
             try {
-                this._saveStore();
+                this._saveStore(true);
             } catch (e) {
                 logError(e, 'xnote-placement: could not save geometry');
             }
